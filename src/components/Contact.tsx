@@ -65,7 +65,7 @@ const Contact = () => {
           {/* Map */}
           <div className="rounded-sm overflow-hidden shadow-lg h-[300px] lg:h-full min-h-[300px]">
             <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2483.5!2d0.2148!3d51.5542!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47d8b5a3a3a3a3a3%3A0x0!2zNTYgU3RhdGlvbiBMYW5lLCBIb3JuY2h1cmNo!5e0!3m2!1sen!2suk!4v1700000000000!5m2!1sen!2suk"
+              src="https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=Noor+Restaurant,56+Station+Lane,Hornchurch,RM12+6NB,UK&zoom=16"
               width="100%"
               height="100%"
               style={{ border: 0 }}
