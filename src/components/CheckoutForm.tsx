@@ -151,7 +151,7 @@ ${details.instructions ? `Special Instructions: ${details.instructions}` : ""}
         disabled={submitting || items.length === 0 || belowMinimum}
         className="w-full bg-terracotta text-cream py-3.5 rounded-sm font-body font-semibold text-sm uppercase tracking-widest hover:bg-terracotta/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {submitting ? "Placing Order..." : "Place Order — Cash on Delivery"}
+        {submitting ? "Placing Order..." : "Place Order"}
       </button>
     </form>
   );
