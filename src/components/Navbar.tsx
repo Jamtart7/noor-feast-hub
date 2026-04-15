@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, ShoppingBag } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
+import NoorLogo from "./NoorLogo";
 import { motion, AnimatePresence } from "framer-motion";
 
 const Navbar = () => {
@@ -28,8 +29,8 @@ const Navbar = () => {
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? "bg-cream/95 backdrop-blur-md shadow-sm" : "bg-transparent"}`}>
       <div className="container mx-auto px-4 md:px-8 flex items-center justify-between h-16 md:h-20">
-        <Link to="/" className="font-heading text-2xl md:text-3xl font-bold text-terracotta tracking-wide">
-          Noor
+        <Link to="/" className="flex items-center">
+          <NoorLogo size={56} />
         </Link>
 
         {/* Desktop */}
