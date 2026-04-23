@@ -24,7 +24,7 @@ const Hero = () => {
             src={noorWordmark}
             alt="Noor"
             className="w-72 md:w-96 lg:w-[28rem] h-auto select-none"
-            style={{ filter: "drop-shadow(0 2px 12px rgba(0,0,0,0.55)) drop-shadow(0 0 2px rgba(255,240,220,0.35))" }}
+            
             draggable={false}
           />
           <span className="sr-only">Noor</span>
