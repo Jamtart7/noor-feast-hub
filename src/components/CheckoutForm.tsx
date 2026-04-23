@@ -1,6 +1,7 @@
-import { useState, useRef, FormEvent } from "react";
+import { useState, FormEvent } from "react";
 import { useCart } from "@/contexts/CartContext";
 import { useNavigate } from "react-router-dom";
+import { GOOGLE_FORM_ACTION_URL, GOOGLE_FORM_FIELDS } from "@/config/orderConfig";
 
 interface OrderDetails {
   name: string;
@@ -11,9 +12,12 @@ interface OrderDetails {
   instructions: string;
 }
 
-const generateOrderRef = () => {
-  const num = Math.floor(Math.random() * 9999) + 1;
-  return `NOOR-${String(num).padStart(4, "0")}`;
+const generateOrderRef = () => `NOOR-${Date.now()}`;
+
+const formatDateTime = (date: Date) => {
+  const datePart = date.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  const timePart = date.toLocaleTimeString("en-GB", { hour: "numeric", minute: "2-digit", hour12: true }).toUpperCase();
+  return `${datePart}, ${timePart}`;
 };
 
 const CheckoutForm = () => {
@@ -26,44 +30,68 @@ const CheckoutForm = () => {
   const deliveryMinimum = 15;
   const belowMinimum = details.orderType === "delivery" && total < deliveryMinimum;
 
+  const submitToGoogleForm = async (data: Record<string, string>) => {
+    if (!GOOGLE_FORM_ACTION_URL) {
+      console.warn("[Order] GOOGLE_FORM_ACTION_URL not configured — skipping form submission.");
+      return;
+    }
+    const formData = new FormData();
+    Object.entries(data).forEach(([fieldId, value]) => {
+      formData.append(fieldId, value);
+    });
+    // no-cors: Google Forms returns an opaque response but accepts the data.
+    try {
+      await fetch(GOOGLE_FORM_ACTION_URL, {
+        method: "POST",
+        mode: "no-cors",
+        body: formData,
+      });
+    } catch (err) {
+      console.error("[Order] Google Form submission error:", err);
+    }
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (items.length === 0 || belowMinimum) return;
     setSubmitting(true);
 
     const orderRef = generateOrderRef();
-    const timestamp = new Date().toLocaleString("en-GB", { dateStyle: "full", timeStyle: "short" });
+    const now = new Date();
+    const dateTimeFormatted = formatDateTime(now);
+    const timestamp = now.toLocaleString("en-GB", { dateStyle: "full", timeStyle: "short" });
 
-    // Build order summary for email
-    const itemsText = items.map(i => `${i.name} x${i.quantity} — £${(i.price * i.quantity).toFixed(2)}`).join("\n");
-    const summary = `
-ORDER REFERENCE: ${orderRef}
-DATE: ${timestamp}
+    const itemsText = items
+      .map(i => `${i.quantity}x ${i.name} - £${(i.price * i.quantity).toFixed(2)}`)
+      .join("\n");
 
-ITEMS:
-${itemsText}
+    const subtotalStr = `£${subtotal.toFixed(2)}`;
+    const discountStr = `£${discount.toFixed(2)} (10%)`;
+    const totalStr = `£${total.toFixed(2)}`;
 
-Subtotal: £${subtotal.toFixed(2)}
-10% Takeaway Discount: -£${discount.toFixed(2)}
-TOTAL: £${total.toFixed(2)}
+    // Build Google Form payload
+    const payload: Record<string, string> = {
+      [GOOGLE_FORM_FIELDS.orderRef]: orderRef,
+      [GOOGLE_FORM_FIELDS.orderDateTime]: dateTimeFormatted,
+      [GOOGLE_FORM_FIELDS.customerName]: details.name,
+      [GOOGLE_FORM_FIELDS.customerPhone]: details.phone,
+      [GOOGLE_FORM_FIELDS.customerEmail]: details.email,
+      [GOOGLE_FORM_FIELDS.orderType]: details.orderType === "delivery" ? "Delivery" : "Collection",
+      [GOOGLE_FORM_FIELDS.deliveryAddress]: details.orderType === "delivery" ? details.address : "",
+      [GOOGLE_FORM_FIELDS.orderItems]: itemsText,
+      [GOOGLE_FORM_FIELDS.subtotal]: subtotalStr,
+      [GOOGLE_FORM_FIELDS.discount]: discountStr,
+      [GOOGLE_FORM_FIELDS.totalAmount]: totalStr,
+      [GOOGLE_FORM_FIELDS.specialInstructions]: details.instructions || "",
+    };
 
-CUSTOMER DETAILS:
-Name: ${details.name}
-Phone: ${details.phone}
-Email: ${details.email}
-${details.orderType === "delivery" ? `Delivery Address: ${details.address}` : "Collection"}
-${details.instructions ? `Special Instructions: ${details.instructions}` : ""}
-    `.trim();
+    await submitToGoogleForm(payload);
 
     // Store order for confirmation page
     sessionStorage.setItem("noor-order", JSON.stringify({
       orderRef, timestamp, items, subtotal, discount, total,
-      customer: details, summary,
+      customer: details,
     }));
-
-    // TODO: EmailJS integration - user needs to set up EmailJS service
-    // For now, log the order and redirect to confirmation
-    console.log("Order submitted:", summary);
 
     clearCart();
     setSubmitting(false);
