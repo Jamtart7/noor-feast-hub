@@ -98,9 +98,6 @@ const OrderConfirmation = () => {
               )}
             </div>
 
-            <div className="mt-6 bg-muted/50 rounded-sm p-4 text-center">
-              <p className="text-sm text-muted-foreground">Payment: <span className="font-semibold text-dark">Cash on Delivery</span></p>
-            </div>
           </div>
 
           <div className="text-center mt-8">
