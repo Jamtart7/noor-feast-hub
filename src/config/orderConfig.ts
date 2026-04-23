@@ -1,33 +1,23 @@
 // ============================================================
 // GOOGLE FORMS INTEGRATION CONFIG
 // ============================================================
-// Paste your Google Form's POST action URL here.
-// To get it:
-//   1. Open your Google Form > Send > <> (embed) OR view page source
-//   2. Find the form action URL — it ends in "/formResponse"
-//      e.g. https://docs.google.com/forms/d/e/1FAIpQLSc.../formResponse
-//   3. Paste it below.
-// ============================================================
-export const GOOGLE_FORM_ACTION_URL = "";
+export const GOOGLE_FORM_ACTION_URL =
+  "https://docs.google.com/forms/d/e/1FAIpQLSdOWsiUP9EaDiFQ2akK1Snd-aTPjHYHUEqsaMGukpBAoemiaA/formResponse";
 
 // ============================================================
 // Map each order field to its Google Form entry ID.
-// To find each entry ID:
-//   1. Open your Form, click "Get pre-filled link"
-//   2. Fill in placeholder values, click "Get link"
-//   3. The URL contains entry.XXXXXXXXX=value pairs — copy the IDs.
 // ============================================================
 export const GOOGLE_FORM_FIELDS = {
-  orderRef:           "entry.000000001",
-  orderDateTime:      "entry.000000002",
-  customerName:       "entry.000000003",
-  customerPhone:      "entry.000000004",
-  customerEmail:      "entry.000000005",
-  orderType:          "entry.000000006",
-  deliveryAddress:    "entry.000000007",
-  orderItems:         "entry.000000008",
-  subtotal:           "entry.000000009",
-  discount:           "entry.000000010",
-  totalAmount:        "entry.000000011",
-  specialInstructions:"entry.000000012",
+  orderRef:            "entry.1314176522",
+  orderDateTime:       "entry.305204827",
+  customerName:        "entry.1463740825",
+  customerPhone:       "entry.1365452988",
+  customerEmail:       "entry.1619006885",
+  orderType:           "entry.585117096",
+  deliveryAddress:     "entry.1873176",
+  orderItems:          "entry.983621819",
+  subtotal:            "entry.1336821289",
+  discount:            "entry.47093094",
+  totalAmount:         "entry.409306138",
+  specialInstructions: "entry.1869911469",
 };
