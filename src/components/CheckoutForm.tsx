@@ -35,16 +35,17 @@ const CheckoutForm = () => {
       console.warn("[Order] GOOGLE_FORM_ACTION_URL not configured — skipping form submission.");
       return;
     }
-    const formData = new FormData();
+    const params = new URLSearchParams();
     Object.entries(data).forEach(([fieldId, value]) => {
-      formData.append(fieldId, value);
+      params.append(fieldId, value);
     });
     // no-cors: Google Forms returns an opaque response but accepts the data.
     try {
       await fetch(GOOGLE_FORM_ACTION_URL, {
         method: "POST",
         mode: "no-cors",
-        body: formData,
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: params.toString(),
       });
     } catch (err) {
       console.error("[Order] Google Form submission error:", err);
