@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import heroBg from "@/assets/hero-bg.jpg";
+import noorWordmark from "@/assets/noor-wordmark.png";
 
 const Hero = () => {
   return (
@@ -17,9 +18,15 @@ const Hero = () => {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="font-heading text-5xl md:text-7xl lg:text-8xl font-bold text-cream mb-4 tracking-tight"
+          className="mb-4 flex justify-center"
         >
-          Noor
+          <img
+            src={noorWordmark}
+            alt="Noor"
+            className="w-64 md:w-80 lg:w-96 h-auto select-none"
+            draggable={false}
+          />
+          <span className="sr-only">Noor</span>
         </motion.h1>
         <motion.div
           initial={{ opacity: 0, scaleX: 0 }}
