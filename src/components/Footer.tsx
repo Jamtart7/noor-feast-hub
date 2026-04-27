@@ -50,7 +50,7 @@ const Footer = () => {
             <address className="not-italic text-cream/80 text-sm space-y-3">
               <p>56 Station Lane,<br />Hornchurch, RM12 6NB</p>
               <a href="tel:01708471526" className="block hover:text-amber transition-colors">01708 471 526</a>
-              <a href="mailto:info@noor-restaurant.com" className="block hover:text-amber transition-colors">info@noor-restaurant.com</a>
+              <a href="mailto:info@noorrestaurant.co.uk" className="block hover:text-amber transition-colors">info@noorrestaurant.co.uk</a>
             </address>
           </div>
         </div>
