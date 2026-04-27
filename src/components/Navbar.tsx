@@ -24,7 +24,7 @@ const Navbar = () => {
     { to: "/menu", label: "Menu" },
     { to: "/order", label: "Order Online" },
     { to: "/events", label: "Events" },
-    { to: "/contact", label: "Contact" },
+    { to: "/contact", label: "Visit Us" },
   ];
 
   return (
