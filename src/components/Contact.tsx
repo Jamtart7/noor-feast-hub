@@ -41,7 +41,7 @@ const Contact = () => {
               <Mail className="w-5 h-5 text-terracotta mt-1 shrink-0" />
               <div>
                 <h4 className="font-heading font-semibold text-dark">Email</h4>
-                <a href="mailto:info@noor-restaurant.com" className="text-muted-foreground text-sm hover:text-terracotta transition-colors">info@noor-restaurant.com</a>
+                <a href="mailto:info@noorrestaurant.co.uk" className="text-muted-foreground text-sm hover:text-terracotta transition-colors">info@noorrestaurant.co.uk</a>
               </div>
             </div>
           </div>

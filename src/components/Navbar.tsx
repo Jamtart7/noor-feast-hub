@@ -23,6 +23,7 @@ const Navbar = () => {
     { to: "/", label: "Home" },
     { to: "/menu", label: "Menu" },
     { to: "/order", label: "Order Online" },
+    { to: "/#events", label: "Events" },
     { to: "/#contact", label: "Contact" },
   ];
 

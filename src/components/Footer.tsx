@@ -40,6 +40,7 @@ const Footer = () => {
               <li><Link to="/" className="text-cream/80 text-sm hover:text-amber transition-colors">Home</Link></li>
               <li><Link to="/menu" className="text-cream/80 text-sm hover:text-amber transition-colors">Menu</Link></li>
               <li><Link to="/order" className="text-cream/80 text-sm hover:text-amber transition-colors">Order Online</Link></li>
+              <li><Link to="/#events" className="text-cream/80 text-sm hover:text-amber transition-colors">Events</Link></li>
               <li><Link to="/#contact" className="text-cream/80 text-sm hover:text-amber transition-colors">Visit Us</Link></li>
             </ul>
           </div>
@@ -50,7 +51,7 @@ const Footer = () => {
             <address className="not-italic text-cream/80 text-sm space-y-3">
               <p>56 Station Lane,<br />Hornchurch, RM12 6NB</p>
               <a href="tel:01708471526" className="block hover:text-amber transition-colors">01708 471 526</a>
-              <a href="mailto:info@noor-restaurant.com" className="block hover:text-amber transition-colors">info@noor-restaurant.com</a>
+              <a href="mailto:info@noorrestaurant.co.uk" className="block hover:text-amber transition-colors">info@noorrestaurant.co.uk</a>
             </address>
           </div>
         </div>
