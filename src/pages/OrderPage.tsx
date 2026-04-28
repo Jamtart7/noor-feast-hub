@@ -25,7 +25,7 @@ const OrderPage = () => {
             <p className="text-muted-foreground text-sm mt-3">10% discount applied automatically on all orders</p>
           </div>
 
-          <div className="flex flex-col lg:flex-row gap-8">
+          <div className="flex flex-col gap-8">
             {/* Left: Menu */}
             <div className="flex-1">
               {/* Category tabs */}
