@@ -8,6 +8,8 @@ import Index from "./pages/Index.tsx";
 import MenuPage from "./pages/MenuPage.tsx";
 import OrderPage from "./pages/OrderPage.tsx";
 import OrderConfirmation from "./pages/OrderConfirmation.tsx";
+import OrderSuccess from "./pages/OrderSuccess.tsx";
+import OrderCancelled from "./pages/OrderCancelled.tsx";
 import EventsPage from "./pages/EventsPage.tsx";
 import ContactPage from "./pages/ContactPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
@@ -26,6 +28,8 @@ const App = () => (
             <Route path="/menu" element={<MenuPage />} />
             <Route path="/order" element={<OrderPage />} />
             <Route path="/order-confirmation" element={<OrderConfirmation />} />
+            <Route path="/order-success" element={<OrderSuccess />} />
+            <Route path="/order-cancelled" element={<OrderCancelled />} />
             <Route path="/events" element={<EventsPage />} />
             <Route path="/contact" element={<ContactPage />} />
             <Route path="*" element={<NotFound />} />
