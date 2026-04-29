@@ -3,6 +3,7 @@ import Hero from "@/components/Hero";
 import About from "@/components/About";
 import Offers from "@/components/Offers";
 import Footer from "@/components/Footer";
+import PhotoCarousel from "@/components/PhotoCarousel"
 
 const Index = () => {
   return (
