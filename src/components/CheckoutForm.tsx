@@ -1,217 +1,325 @@
-import { useState, FormEvent } from "react";
+import { useState } from "react";
 import { useCart } from "@/contexts/CartContext";
-import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
-import { z } from "zod";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Button } from "@/components/ui/button";
-import { Banknote, CreditCard, Loader2 } from "lucide-react";
-import { ORDER_API } from "@/config/orderConfig";
+import { useToast } from "@/hooks/use-toast";
+import { orderConfig } from "@/config/orderConfig";
 
-type PaymentMethod = "cash" | "card";
-
-const orderSchema = z.object({
-  name: z.string().trim().min(1, "Name is required").max(100),
-  email: z.string().trim().email("Invalid email").max(255).optional().or(z.literal("")),
-  phone: z.string().trim().min(7, "Phone is required").max(20),
-  address: z.string().trim().min(5, "Delivery address is required").max(300),
-  notes: z.string().trim().max(500).optional().or(z.literal("")),
-});
+type FulfillmentType = "delivery" | "collection";
+type PaymentMethod = "card" | "cash";
 
 const CheckoutForm = () => {
-  const { items, total, clearCart } = useCart();
-  const navigate = useNavigate();
-  const [submitting, setSubmitting] = useState(false);
-  const [payment, setPayment] = useState<PaymentMethod>("cash");
-  const [form, setForm] = useState({
-    name: "",
+  const { items, getTotal, clearCart } = useCart();
+  const { toast } = useToast();
+  
+  const [fulfillmentType, setFulfillmentType] = useState<FulfillmentType>("delivery");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const [formData, setFormData] = useState({
+    fullName: "",
     email: "",
     phone: "",
     address: "",
-    notes: "",
+    notes: ""
   });
 
-  const handleSubmit = async (e: FormEvent) => {
+  const subtotal = getTotal();
+  const discount = subtotal * 0.1; // 10% discount
+  const total = subtotal - discount;
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (items.length === 0) {
-      toast.error("Your cart is empty");
+    
+    // Validation
+    if (!formData.fullName || !formData.phone) {
+      toast({
+        variant: "destructive",
+        title: "Missing Information",
+        description: "Please fill in your name and phone number."
+      });
       return;
     }
 
-    const parsed = orderSchema.safeParse(form);
-    if (!parsed.success) {
-      const firstError = Object.values(parsed.error.flatten().fieldErrors)[0]?.[0];
-      toast.error(firstError ?? "Please check the form");
+    if (fulfillmentType === "delivery" && !formData.address) {
+      toast({
+        variant: "destructive",
+        title: "Missing Address",
+        description: "Please enter your delivery address."
+      });
       return;
     }
 
-    const payload = {
-      name: form.name.trim(),
-      email: form.email.trim(),
-      phone: form.phone.trim(),
-      address: form.address.trim(),
-      notes: form.notes.trim(),
-      items: items.map(i => ({ name: i.name, quantity: i.quantity, price: i.price })),
-      total: Number(total.toFixed(2)),
-    };
+    setIsProcessing(true);
 
-    setSubmitting(true);
     try {
-      if (payment === "cash") {
-        const res = await fetch(ORDER_API.cashOrder, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        if (!res.ok) throw new Error(`Server returned ${res.status}`);
-        const data = await res.json().catch(() => ({}));
-        const orderId = data.orderId ?? data.order_id ?? data.id ?? `NOOR-${Date.now()}`;
+      const orderData = {
+        customerName: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        address: fulfillmentType === "delivery" ? formData.address : "Collection",
+        items: items.map(item => ({
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price
+        })),
+        notes: formData.notes,
+        subtotal: subtotal.toFixed(2),
+        discount: discount.toFixed(2),
+        total: total.toFixed(2),
+        fulfillmentType: fulfillmentType,
+        paymentMethod: paymentMethod
+      };
 
-        sessionStorage.setItem("noor-order-success", JSON.stringify({
-          orderId,
-          paymentMethod: "Cash on Delivery",
-          customer: payload,
-          items: payload.items,
-          total: payload.total,
-        }));
+      if (paymentMethod === "card") {
+        // Stripe checkout
+        const response = await fetch(orderConfig.cardCheckout, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(orderData)
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to create checkout session");
+        }
+
+        const { sessionUrl } = await response.json();
+        
+        // Redirect to Stripe
+        window.location.href = sessionUrl;
+      } else {
+        // Cash order
+        const response = await fetch(orderConfig.cashOrders, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(orderData)
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to submit order");
+        }
+
+        const result = await response.json();
+
+        toast({
+          title: "Order Placed!",
+          description: `Your order #${result.orderId} has been received. We'll call you to confirm.`
+        });
 
         clearCart();
-        toast.success("Order placed successfully!");
-        navigate("/order-success");
-      } else {
-        const res = await fetch(ORDER_API.cardCheckout, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
+        setFormData({
+          fullName: "",
+          email: "",
+          phone: "",
+          address: "",
+          notes: ""
         });
-        if (!res.ok) throw new Error(`Server returned ${res.status}`);
-        const data = await res.json();
-        const checkoutUrl = data.url ?? data.checkoutUrl ?? data.checkout_url;
-        if (!checkoutUrl) throw new Error("Missing checkout URL from server");
-
-        // Persist for the success page in case Stripe redirects back
-        sessionStorage.setItem("noor-order-pending", JSON.stringify({
-          orderId: data.orderId ?? data.order_id ?? data.id ?? null,
-          paymentMethod: "Card (Stripe)",
-          customer: payload,
-          items: payload.items,
-          total: payload.total,
-        }));
-
-        window.location.href = checkoutUrl;
       }
-    } catch (err) {
-      console.error("[Checkout] Error:", err);
-      toast.error(err instanceof Error ? err.message : "Something went wrong. Please try again.");
-      setSubmitting(false);
+    } catch (error) {
+      console.error("Checkout error:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to process your order. Please try again."
+      });
+    } finally {
+      setIsProcessing(false);
     }
   };
 
-  const buttonLabel = submitting
-    ? "Processing..."
-    : payment === "cash"
-    ? `Place Order — £${total.toFixed(2)}`
-    : `Pay £${total.toFixed(2)} with Card`;
-
   return (
-    <Card id="checkout" className="border-border shadow-lg">
-      <CardHeader>
-        <CardTitle className="font-heading text-xl text-dark">Checkout</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="space-y-1.5">
-            <Label htmlFor="name">Full Name *</Label>
-            <Input id="name" required value={form.name}
-              onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="phone">Phone *</Label>
-              <Input id="phone" type="tel" required value={form.phone}
-                onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="email">Email <span className="text-muted-foreground text-xs">(optional)</span></Label>
-              <Input id="email" type="email" value={form.email}
-                onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="address">Delivery Address *</Label>
-            <Textarea id="address" required rows={2} value={form.address}
-              onChange={e => setForm(f => ({ ...f, address: e.target.value }))} />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="notes">Order Notes <span className="text-muted-foreground text-xs">(optional)</span></Label>
-            <Textarea id="notes" rows={2} placeholder="Allergies, preferences, etc."
-              value={form.notes}
-              onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Payment Method *</Label>
-            <RadioGroup
-              value={payment}
-              onValueChange={(v) => setPayment(v as PaymentMethod)}
-              className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+    <div className="bg-white rounded-lg shadow-sm p-6">
+      <h2 className="font-heading text-2xl font-bold text-dark mb-6">Checkout</h2>
+      
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Fulfillment Type */}
+        <div>
+          <label className="block text-sm font-medium text-dark mb-2">
+            Order Type *
+          </label>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => setFulfillmentType("delivery")}
+              className={`py-3 px-4 rounded-md border-2 font-medium transition-all ${
+                fulfillmentType === "delivery"
+                  ? "border-terracotta bg-terracotta/10 text-terracotta"
+                  : "border-border text-muted-foreground hover:border-terracotta/50"
+              }`}
             >
-              <label
-                htmlFor="pay-cash"
-                className={`flex items-start gap-3 rounded-sm border p-3 cursor-pointer transition-colors ${
-                  payment === "cash" ? "border-terracotta bg-terracotta/5" : "border-border hover:bg-muted"
-                }`}
-              >
-                <RadioGroupItem value="cash" id="pay-cash" className="mt-1" />
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 font-medium text-dark text-sm">
-                    <Banknote className="w-4 h-4" /> Cash on Delivery
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-0.5">Pay when your order arrives.</p>
-                </div>
-              </label>
+              Delivery
+            </button>
+            <button
+              type="button"
+              onClick={() => setFulfillmentType("collection")}
+              className={`py-3 px-4 rounded-md border-2 font-medium transition-all ${
+                fulfillmentType === "collection"
+                  ? "border-terracotta bg-terracotta/10 text-terracotta"
+                  : "border-border text-muted-foreground hover:border-terracotta/50"
+              }`}
+            >
+              Collection
+            </button>
+          </div>
+        </div>
 
-              <label
-                htmlFor="pay-card"
-                className={`flex items-start gap-3 rounded-sm border p-3 cursor-pointer transition-colors ${
-                  payment === "card" ? "border-terracotta bg-terracotta/5" : "border-border hover:bg-muted"
-                }`}
-              >
-                <RadioGroupItem value="card" id="pay-card" className="mt-1" />
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 font-medium text-dark text-sm">
-                    <CreditCard className="w-4 h-4" /> Pay by Card
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-0.5">Secure payment via Stripe.</p>
-                </div>
-              </label>
-            </RadioGroup>
+        {/* Payment Method */}
+        <div>
+          <label className="block text-sm font-medium text-dark mb-2">
+            Payment Method *
+          </label>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => setPaymentMethod("card")}
+              className={`py-3 px-4 rounded-md border-2 font-medium transition-all ${
+                paymentMethod === "card"
+                  ? "border-terracotta bg-terracotta/10 text-terracotta"
+                  : "border-border text-muted-foreground hover:border-terracotta/50"
+              }`}
+            >
+              Pay by Card
+            </button>
+            <button
+              type="button"
+              onClick={() => setPaymentMethod("cash")}
+              className={`py-3 px-4 rounded-md border-2 font-medium transition-all ${
+                paymentMethod === "cash"
+                  ? "border-terracotta bg-terracotta/10 text-terracotta"
+                  : "border-border text-muted-foreground hover:border-terracotta/50"
+              }`}
+            >
+              Cash
+            </button>
+          </div>
+        </div>
+
+        {/* Form Fields */}
+        <div>
+          <label htmlFor="fullName" className="block text-sm font-medium text-dark mb-1">
+            Full Name *
+          </label>
+          <input
+            type="text"
+            id="fullName"
+            name="fullName"
+            value={formData.fullName}
+            onChange={handleInputChange}
+            required
+            className="w-full px-4 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-terracotta"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="phone" className="block text-sm font-medium text-dark mb-1">
+              Phone *
+            </label>
+            <input
+              type="tel"
+              id="phone"
+              name="phone"
+              value={formData.phone}
+              onChange={handleInputChange}
+              required
+              className="w-full px-4 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-terracotta"
+            />
           </div>
 
-          <div className="rounded-sm bg-muted p-3 flex justify-between items-center">
-            <span className="text-sm text-muted-foreground">Total to pay</span>
-            <span className="font-heading font-bold text-lg text-terracotta">£{total.toFixed(2)}</span>
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-dark mb-1">
+              Email (optional)
+            </label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={formData.email}
+              onChange={handleInputChange}
+              className="w-full px-4 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-terracotta"
+            />
           </div>
+        </div>
 
-          <Button
-            type="submit"
-            disabled={submitting || items.length === 0}
-            className="w-full bg-terracotta text-cream hover:bg-terracotta/90 py-6 text-sm uppercase tracking-widest font-semibold"
-          >
-            {submitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            {buttonLabel}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+        {fulfillmentType === "delivery" && (
+          <div>
+            <label htmlFor="address" className="block text-sm font-medium text-dark mb-1">
+              Delivery Address *
+            </label>
+            <input
+              type="text"
+              id="address"
+              name="address"
+              value={formData.address}
+              onChange={handleInputChange}
+              required={fulfillmentType === "delivery"}
+              placeholder="Street address, city, postcode"
+              className="w-full px-4 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-terracotta"
+            />
+          </div>
+        )}
+
+        <div>
+          <label htmlFor="notes" className="block text-sm font-medium text-dark mb-1">
+            Order Notes (optional)
+          </label>
+          <textarea
+            id="notes"
+            name="notes"
+            value={formData.notes}
+            onChange={handleInputChange}
+            rows={3}
+            placeholder="Allergies, preferences, etc."
+            className="w-full px-4 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-terracotta resize-none"
+          />
+        </div>
+
+        {/* Order Summary */}
+        <div className="border-t border-border pt-4 space-y-2">
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Subtotal:</span>
+            <span className="font-medium">£{subtotal.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between text-sm text-green-600">
+            <span>10% Takeaway Discount:</span>
+            <span className="font-medium">-£{discount.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between text-lg font-bold text-dark pt-2 border-t border-border">
+            <span>Total:</span>
+            <span>£{total.toFixed(2)}</span>
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          disabled={isProcessing}
+          className="w-full bg-terracotta text-cream py-3 rounded-md font-medium hover:bg-terracotta/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isProcessing 
+            ? "Processing..." 
+            : paymentMethod === "card" 
+              ? "Proceed to Payment" 
+              : "Place Order"}
+        </button>
+
+        <p className="text-xs text-muted-foreground text-center">
+          {paymentMethod === "card" 
+            ? "You will be redirected to our secure payment page"
+            : `Pay cash on ${fulfillmentType}`}
+        </p>
+      </form>
+    </div>
   );
 };
 
 export default CheckoutForm;
+
