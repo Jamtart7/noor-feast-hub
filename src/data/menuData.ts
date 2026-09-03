@@ -42,8 +42,15 @@ export const menuCategories: MenuCategory[] = [
       },
       {
         id: "app4",
-        name: "Somosa",
-        description: "Fried pastries filled with a choice of meat or vegetable",
+        name: "Meat Samosa",
+        description: "Fried pastries filled with spiced minced meat",
+        price: 3.75,
+        category: "appetisers"
+      },
+      {
+        id: "app4b",
+        name: "Vegetable Samosa",
+        description: "Fried pastries filled with spiced vegetables",
         price: 3.75,
         category: "appetisers"
       },
@@ -65,7 +72,7 @@ export const menuCategories: MenuCategory[] = [
       {
         id: "app7",
         name: "Mix Starter",
-        description: "Chicken tikka, lamb tikka, sheek kabab and meat somosa",
+        description: "Chicken tikka, lamb tikka, sheek kabab and meat samosa",
         price: 8.75,
         category: "appetisers",
         popular: true
@@ -113,15 +120,15 @@ export const menuCategories: MenuCategory[] = [
     items: [
       {
         id: "tan1",
-        name: "Tandoori Chicken",
-        description: "Whole",
+        name: "Tandoori Chicken (Whole)",
+        description: "Marinated in herbs and spices, barbecued in the tandoor",
         price: 13.95,
         category: "tandoori"
       },
       {
         id: "tan2",
-        name: "Tandoori Chicken",
-        description: "Half",
+        name: "Tandoori Chicken (Half)",
+        description: "Marinated in herbs and spices, barbecued in the tandoor",
         price: 8.50,
         category: "tandoori"
       },
@@ -421,14 +428,14 @@ export const menuCategories: MenuCategory[] = [
       },
       {
         id: "chk2",
-        name: "Madras",
+        name: "Chicken Madras",
         description: "Hot",
         price: 8.50,
         category: "chicken"
       },
       {
         id: "chk3",
-        name: "Vindaloo",
+        name: "Chicken Vindaloo",
         description: "Very hot",
         price: 8.50,
         category: "chicken"
@@ -483,14 +490,14 @@ export const menuCategories: MenuCategory[] = [
       },
       {
         id: "lmb2",
-        name: "Madras",
+        name: "Lamb Madras",
         description: "Hot",
         price: 8.75,
         category: "lamb"
       },
       {
         id: "lmb3",
-        name: "Vindaloo",
+        name: "Lamb Vindaloo",
         description: "Very hot",
         price: 8.75,
         category: "lamb"
@@ -552,14 +559,14 @@ export const menuCategories: MenuCategory[] = [
       },
       {
         id: "prw2",
-        name: "Madras",
+        name: "Prawn Madras",
         description: "Hot",
         price: 8.75,
         category: "prawn"
       },
       {
         id: "prw3",
-        name: "Vindaloo",
+        name: "Prawn Vindaloo",
         description: "Very hot",
         price: 8.75,
         category: "prawn"
@@ -607,14 +614,14 @@ export const menuCategories: MenuCategory[] = [
       },
       {
         id: "kpr2",
-        name: "Madras",
+        name: "Kingprawn Madras",
         description: "Hot",
         price: 11.75,
         category: "kingprawn"
       },
       {
         id: "kpr3",
-        name: "Vindaloo",
+        name: "Kingprawn Vindaloo",
         description: "Very hot",
         price: 11.75,
         category: "kingprawn"
